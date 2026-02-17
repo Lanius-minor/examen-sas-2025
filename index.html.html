@@ -1,0 +1,1599 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador Examen Real | Celador-Conductor SAS 2025</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Bandera de Andalucía ondeando */
+        .flag-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: linear-gradient(180deg, #006633 0%, #006633 33%, #ffffff 33%, #ffffff 66%, #006633 66%, #006633 100%);
+            background-size: 100% 300%;
+            animation: wave 8s ease-in-out infinite;
+        }
+
+        .flag-background::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 200px;
+            height: 280px;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280"><rect fill="%23006633" x="0" y="0" width="200" height="280"/><rect fill="%23ffffff" x="0" y="93" width="200" height="94"/><rect fill="%23006633" x="0" y="187" width="200" height="93"/><path fill="%23ffd700" d="M100 40 L110 70 L140 70 L115 90 L125 120 L100 100 L75 120 L85 90 L60 70 L90 70 Z" opacity="0.3"/></svg>') center/contain no-repeat;
+            opacity: 0.15;
+            animation: pulse 4s ease-in-out infinite;
+        }
+
+        @keyframes wave {
+            0%, 100% { background-position: 0% 0%; }
+            50% { background-position: 0% 20%; }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.15; }
+            50% { transform: translate(-50%, -50%) scale(1.1); opacity: 0.25; }
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Pantalla de inicio */
+        .start-screen {
+            text-align: center;
+            padding: 60px 20px;
+            color: white;
+            animation: fadeIn 1s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .logo-sas {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            text-shadow: 0 0 30px rgba(255, 215, 0, 0.8);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            background: linear-gradient(90deg, #ffffff, #ffd700, #ffffff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            font-size: 1.3rem;
+            color: #ffd700;
+            margin-bottom: 30px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+        }
+
+        .exam-info {
+            background: rgba(0, 102, 51, 0.9);
+            border: 3px solid #ffd700;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 30px 0;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+
+        .exam-info h2 {
+            color: #ffd700;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .stat-box {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #ffd700;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #ffd700;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: white;
+            margin-top: 5px;
+        }
+
+        .btn-start {
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            color: #006633;
+            border: none;
+            padding: 20px 60px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            margin-top: 30px;
+            box-shadow: 0 10px 30px rgba(255, 215, 0, 0.4);
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .btn-start:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 15px 40px rgba(255, 215, 0, 0.6);
+        }
+
+        /* Pantalla del quiz */
+        .quiz-screen {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .header {
+            background: rgba(0, 102, 51, 0.95);
+            border: 2px solid #ffd700;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
+
+        .timer {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #ffd700;
+            font-family: 'Courier New', monospace;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+
+        .timer.warning {
+            color: #ff4444;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .progress {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .progress-bar {
+            height: 10px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ffd700, #ffed4e);
+            transition: width 0.3s ease;
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+
+        .progress-text {
+            color: white;
+            font-size: 0.9rem;
+            margin-top: 5px;
+            text-align: center;
+        }
+
+        .question-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            border-left: 8px solid #006633;
+        }
+
+        .question-number {
+            color: #006633;
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .question-number::before {
+            content: '❓';
+        }
+
+        .question-text {
+            font-size: 1.2rem;
+            color: #333;
+            line-height: 1.6;
+            margin-bottom: 25px;
+            font-weight: 500;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .option {
+            background: #f5f5f5;
+            border: 3px solid transparent;
+            border-radius: 12px;
+            padding: 18px 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 1.1rem;
+        }
+
+        .option:hover {
+            background: #e8f5e9;
+            border-color: #006633;
+            transform: translateX(10px);
+        }
+
+        .option.selected {
+            background: #006633;
+            color: white;
+            border-color: #ffd700;
+        }
+
+        .option.correct {
+            background: #4caf50;
+            color: white;
+            border-color: #2e7d32;
+        }
+
+        .option.incorrect {
+            background: #f44336;
+            color: white;
+            border-color: #c62828;
+        }
+
+        .option-letter {
+            background: #006633;
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .option.selected .option-letter,
+        .option.correct .option-letter,
+        .option.incorrect .option-letter {
+            background: #ffd700;
+            color: #006633;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .btn-nav {
+            background: #006633;
+            color: white;
+            border: 2px solid #ffd700;
+            padding: 15px 30px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-nav:hover:not(:disabled) {
+            background: #ffd700;
+            color: #006633;
+            transform: translateY(-3px);
+        }
+
+        .btn-nav:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-finish {
+            background: linear-gradient(135deg, #ff4444 0%, #cc0000 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 20px rgba(255, 68, 68, 0.4);
+        }
+
+        .btn-finish:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 8px 30px rgba(255, 68, 68, 0.6);
+        }
+
+        /* Pantalla de resultados */
+        .results-screen {
+            display: none;
+            text-align: center;
+            color: white;
+            animation: fadeIn 0.8s ease;
+        }
+
+        .results-card {
+            background: rgba(0, 102, 51, 0.95);
+            border: 4px solid #ffd700;
+            border-radius: 25px;
+            padding: 40px;
+            margin: 20px 0;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+
+        .result-icon {
+            font-size: 5rem;
+            margin-bottom: 20px;
+        }
+
+        .score-main {
+            font-size: 4rem;
+            font-weight: bold;
+            color: #ffd700;
+            text-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+            margin: 20px 0;
+        }
+
+        .score-label {
+            font-size: 1.3rem;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .results-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .detail-box {
+            background: rgba(255,255,255,0.1);
+            padding: 25px;
+            border-radius: 15px;
+            border: 2px solid;
+        }
+
+        .detail-box.correct { border-color: #4caf50; }
+        .detail-box.incorrect { border-color: #f44336; }
+        .detail-box.empty { border-color: #ff9800; }
+        .detail-box.penalty { border-color: #ff5722; }
+
+        .detail-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+        }
+
+        .detail-box.correct .detail-number { color: #4caf50; }
+        .detail-box.incorrect .detail-number { color: #f44336; }
+        .detail-box.empty .detail-number { color: #ff9800; }
+        .detail-box.penalty .detail-number { color: #ff5722; }
+
+        .detail-label {
+            font-size: 0.9rem;
+            margin-top: 8px;
+            opacity: 0.9;
+        }
+
+        .final-grade {
+            font-size: 3rem;
+            font-weight: bold;
+            margin: 30px 0;
+            padding: 20px;
+            border-radius: 15px;
+            background: rgba(0,0,0,0.3);
+        }
+
+        .final-grade.approved {
+            color: #4caf50;
+            border: 3px solid #4caf50;
+        }
+
+        .final-grade.suspended {
+            color: #f44336;
+            border: 3px solid #f44336;
+        }
+
+        .message {
+            font-size: 1.3rem;
+            line-height: 1.6;
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+        }
+
+        .btn-restart {
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            color: #006633;
+            border: none;
+            padding: 20px 50px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            margin-top: 20px;
+            box-shadow: 0 10px 30px rgba(255, 215, 0, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        .btn-restart:hover {
+            transform: translateY(-5px) scale(1.05);
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            h1 { font-size: 1.8rem; }
+            .subtitle { font-size: 1rem; }
+            .question-text { font-size: 1rem; }
+            .option { font-size: 0.95rem; padding: 15px; }
+            .timer { font-size: 1.5rem; }
+            .score-main { font-size: 3rem; }
+            .results-details { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        /* Animaciones */
+        .shake {
+            animation: shake 0.5s ease;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .pulse {
+            animation: pulse-gold 2s infinite;
+        }
+
+        @keyframes pulse-gold {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.4); }
+            50% { box-shadow: 0 0 0 20px rgba(255, 215, 0, 0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="flag-background"></div>
+    <div class="overlay"></div>
+    
+    <div class="container">
+        <!-- Pantalla de inicio -->
+        <div class="start-screen" id="startScreen">
+            <div class="logo-sas">🏥</div>
+            <h1>Simulador Examen Real</h1>
+            <p class="subtitle">Celador-Conductor | Servicio Andaluz de Salud 2025</p>
+            
+            <div class="exam-info">
+                <h2>📋 Datos del Examen</h2>
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <div class="stat-number">75</div>
+                        <div class="stat-label">Preguntas</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-number">120</div>
+                        <div class="stat-label">Minutos</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-number">1/4</div>
+                        <div class="stat-label">Penalización</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-number">100</div>
+                        <div class="stat-label">Puntos máx</div>
+                    </div>
+                </div>
+                <p style="margin-top: 20px; font-size: 0.95rem; opacity: 0.9;">
+                    ⚠️ Este es el examen real de 2025. Las preguntas y respuestas oficiales han sido analizadas.<br>
+                    ¿Cuántas habrías acertado tú?
+                </p>
+            </div>
+            
+            <button class="btn-start pulse" onclick="startExam()">
+                ▶ Comenzar Simulación
+            </button>
+        </div>
+
+        <!-- Pantalla del quiz -->
+        <div class="quiz-screen" id="quizScreen">
+            <div class="header">
+                <div class="timer" id="timer">120:00</div>
+                <div class="progress">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                    </div>
+                    <div class="progress-text" id="progressText">Pregunta 1 de 75</div>
+                </div>
+            </div>
+
+            <div class="question-card" id="questionCard">
+                <div class="question-number" id="questionNumber">Pregunta 1</div>
+                <div class="question-text" id="questionText"></div>
+                <div class="options" id="optionsContainer"></div>
+            </div>
+
+            <div class="navigation">
+                <button class="btn-nav" id="btnPrev" onclick="prevQuestion()" disabled>
+                    ← Anterior
+                </button>
+                <button class="btn-finish" id="btnFinish" onclick="finishExam()" style="display: none;">
+                    ✓ Finalizar
+                </button>
+                <button class="btn-nav" id="btnNext" onclick="nextQuestion()">
+                    Siguiente →
+                </button>
+            </div>
+        </div>
+
+        <!-- Pantalla de resultados -->
+        <div class="results-screen" id="resultsScreen">
+            <div class="results-card">
+                <div class="result-icon" id="resultIcon">🏆</div>
+                <div class="score-main" id="scoreMain">0</div>
+                <div class="score-label">puntos sobre 100</div>
+                
+                <div class="results-details">
+                    <div class="detail-box correct">
+                        <div class="detail-number" id="correctCount">0</div>
+                        <div class="detail-label">✓ Aciertos</div>
+                    </div>
+                    <div class="detail-box incorrect">
+                        <div class="detail-number" id="incorrectCount">0</div>
+                        <div class="detail-label">✗ Fallos</div>
+                    </div>
+                    <div class="detail-box empty">
+                        <div class="detail-number" id="emptyCount">0</div>
+                        <div class="detail-label">⚪ Sin respuesta</div>
+                    </div>
+                    <div class="detail-box penalty">
+                        <div class="detail-number" id="penaltyPoints">0</div>
+                        <div class="detail-label">⚠ Puntos penalizados</div>
+                    </div>
+                </div>
+
+                <div class="final-grade" id="finalGrade">
+                    SUSPENSO
+                </div>
+
+                <div class="message" id="resultMessage">
+                    Mensaje personalizado según resultado
+                </div>
+
+                <button class="btn-restart" onclick="restartExam()">
+                    ↻ Intentar de nuevo
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Datos del examen real - 75 preguntas con respuestas oficiales
+        const examData = [
+            {
+                question: "Según el artículo 10 de la vigente Constitución Española, son fundamento del orden político y de la paz social todo que sigue, EXCEPTO:",
+                options: [
+                    "La dignidad de la persona y los derechos inviolables que le son inherentes",
+                    "El libre desarrollo de la personalidad",
+                    "El respeto a la ley y a los derechos de los demás",
+                    "La participación de los ciudadanos en los asuntos públicos"
+                ],
+                correct: 3 // D
+            },
+            {
+                question: "La Jefatura del Estado viene recogida en la actual Constitución Española en:",
+                options: [
+                    "El Título V",
+                    "El Título VI",
+                    "El Título VII",
+                    "El Título IV"
+                ],
+                correct: 3 // D
+            },
+            {
+                question: "En el artículo 1 de la Ley Orgánica 2/2007, de 19 de marzo, de reforma del Estatuto de Autonomía para Andalucía, Andalucía se reconoce como:",
+                options: [
+                    "Nacionalidad histórica",
+                    "Entidad regional histórica",
+                    "Comunidad histórica regional en el marco de la unidad de la nación española",
+                    "Territorio regional con autonomía"
+                ],
+                correct: 0 // A
+            },
+            {
+                question: "Según la Ley Orgánica 2/2007, de 19 de marzo, de reforma del Estatuto de Autonomía para Andalucía, dentro de las competencias de la Comunidad Autónoma de Andalucía en materia de salud, sanidad y farmacia, NO se recoge:",
+                options: [
+                    "Promover la salud laboral",
+                    "Sanidad exterior",
+                    "La salud animal con efecto sobre la salud humana",
+                    "Sanidad interior"
+                ],
+                correct: 1 // B
+            },
+            {
+                question: "Según el artículo 6 de la Ley 14/1986, de 25 de abril, General de Sanidad, las actuaciones de las Administraciones Públicas Sanitarias estarán orientadas:",
+                options: [
+                    "A la promoción de la salud",
+                    "A la curación de las enfermedades y la reinserción familiar del paciente",
+                    "A promover el interés individual y familiar por la salud mediante la adecuada educación sanitaria en las escuelas",
+                    "Todas las respuestas anteriores son correctas"
+                ],
+                correct: 0 // A (según oficial, aunque parezca extraño)
+            },
+            {
+                question: "Dentro de los compromisos del IV Plan Andaluz de Salud NO se encuentra:",
+                options: [
+                    "Promover y proteger la salud frente al cambio climático",
+                    "Promover y proteger la salud frente la globalización",
+                    "Promover y proteger la salud frente a los riesgos emergentes de origen ambiental y animal",
+                    "Mantener la esperanza de vida con buena salud"
+                ],
+                correct: 3 // D
+            },
+            {
+                question: "El Biobanco del Sistema Sanitario Público de Andalucía (SSPA) tiene una estructura organizativa única:",
+                options: [
+                    "Centralizada en Sevilla",
+                    "Centralizada en Málaga",
+                    "Centralizada en Granada",
+                    "Descentralizada en provincias"
+                ],
+                correct: 3 // D (Granada no está, la oficial es D)
+            },
+            {
+                question: "En el Servicio Andaluz de Salud (SAS), la red de recursos públicos de Salud Mental NO contempla uno de los siguientes dispositivos:",
+                options: [
+                    "Unidades de Salud Mental Comunitaria de la Tercera Edad",
+                    "Unidades de Rehabilitación de Salud Mental",
+                    "Comunidades Terapéuticas de Salud Mental",
+                    "Unidades de Salud Mental Infanto-juvenil"
+                ],
+                correct: 0 // A
+            },
+            {
+                question: "Según el artículo 32 de la Ley 1/2014, de 24 de junio, de Transparencia Pública de Andalucía, en el ámbito de la Administración de la Junta de Andalucía y sus entidades instrumentales, el plazo máximo de resolución y notificación:",
+                options: [
+                    "Será de 60 días hábiles desde la recepción de la solicitud por el órgano competente para resolver, prorrogables por igual período",
+                    "Será de 30 días hábiles desde la recepción de la solicitud por el órgano competente para resolver, prorrogables por igual período",
+                    "Será de 20 días hábiles desde la recepción de la solicitud por el órgano competente para resolver, prorrogables por igual período",
+                    "No tiene plazo máximo establecido"
+                ],
+                correct: 2 // C (20 días según oficial)
+            },
+            {
+                question: "En relación con los principios de protección de datos que regula la Ley Orgánica 3/2018, de 5 de diciembre, el tratamiento de los datos personales de un menor de edad únicamente podrá fundarse en su consentimiento, con las excepciones que se indican en la misma ley, cuando:",
+                options: [
+                    "Sea mayor de catorce años",
+                    "Sea mayor de doce años",
+                    "Sea mayor de dieciséis años",
+                    "Sea mayor de dieciocho años"
+                ],
+                correct: 0 // A
+            },
+            {
+                question: "Según el artículo 35 de la ley 31/1995, de 8 de noviembre, de Prevención de Riesgos laborales, los Delegados de Prevención serán designados por y entre los representantes del personal. En una empresa de 50 a 100 trabajadores, ¿cuántos Delegados de Protección le corresponden?",
+                options: [
+                    "2 Delegados de Prevención",
+                    "3 Delegados de Prevención",
+                    "4 Delegados de Prevención",
+                    "5 Delegados de Prevención"
+                ],
+                correct: 0 // A
+            },
+            {
+                question: "Según el artículo 2 (ámbito de aplicación) de la Ley 12/2007, de 26 de noviembre, para la promoción de la igualdad de género en Andalucía, esta ley será de aplicación en todo el ámbito territorial de la Comunidad Autónoma de Andalucía, y en particular será de aplicación (señale la respuesta INCORRECTA):",
+                options: [
+                    "A la Administración de la Junta de Andalucía",
+                    "A las empresas de la Junta de Andalucía, a los consorcios, fundaciones y demás entidades con personalidad jurídica propia",
+                    "A las entidades que integran la Administración local",
+                    "Al sistema universitario"
+                ],
+                correct: 1 // B (según oficial, aunque parezca raro)
+            },
+            {
+                question: "Según se establece en el artículo 51.2 de la Ley 55/2003, de 16 de diciembre, del Estatuto Marco del personal estatutario de los servicios de salud, el personal tendrá derecho a un período mínimo de descanso ininterrumpido entre el fin de una jornada y el comienzo de la siguiente de:",
+                options: [
+                    "8 horas",
+                    "24 horas",
+                    "12 horas",
+                    "36 horas"
+                ],
+                correct: 2 // C
+            },
+            {
+                question: "Según se establece en el artículo 5 de la Ley 55/2003, de 16 de diciembre, del Estatuto Marco del personal estatutario de los servicios de salud, el personal estatutario de los servicios de salud se clasifica:",
+                options: [
+                    "Entre personal estatutario sanitario, personal estatutario de gestión y servicios y personal estatutario de formación profesional",
+                    "Atendiendo a la función desarrollada, al nivel del título exigido para el ingreso y al tipo de su nombramiento",
+                    "Entre personal de formación universitaria y personal de formación profesional",
+                    "Entre personal estatutario sanitario facultativo, personal estatutario sanitario no facultativo y personal estatutario de gestión y servicios"
+                ],
+                correct: 1 // B
+            },
+            {
+                question: "Según se establece en el artículo 5 de la Ley 41/2002, de 14 de noviembre, básica reguladora de la autonomía del paciente y de derechos y obligaciones en materia de información y documentación clínica, el titular del derecho a la información asistencial es:",
+                options: [
+                    "El Servicio de Salud correspondiente",
+                    "El personal facultativo que realiza la intervención",
+                    "El paciente",
+                    "El personal sanitario que intervenga en la asistencia"
+                ],
+                correct: 2 // C
+            },
+            {
+                question: "Según se establece en el artículo 5.4 de la Ley 41/2002, de 14 de noviembre, básica reguladora de la autonomía del paciente y de derechos y obligaciones en materia de información y documentación clínica, ¿qué se entiende por 'necesidad terapéutica'?",
+                options: [
+                    "La facultad del médico para actuar profesionalmente sin informar antes al paciente, cuando por razones objetivas el conocimiento de su propia situación pueda perjudicar su salud de manera grave",
+                    "El conjunto de técnicas clínicas necesarias para la correcta actuación profesional de cada intervención",
+                    "La finalidad y la naturaleza de cada intervención, sus riesgos y sus consecuencias",
+                    "Los posibles efectos adversos de su tratamiento"
+                ],
+                correct: 0 // A
+            },
+            {
+                question: "La aplicación AGESCON es:",
+                options: [
+                    "Una aplicación para la gestión de contraseñas",
+                    "Una aplicación para la contratación administrativa",
+                    "Un módulo dentro de la aplicación Gerhonte",
+                    "Un módulo dentro de la aplicación Diraya"
+                ],
+                correct: 0 // A (según oficial)
+            },
+            {
+                question: "Según se establece en el artículo 66.3 de la Ley 55/2003, de 16 de diciembre, del Estatuto Marco del personal estatutario de los servicios de salud, el personal estatutario excedente por prestación de servicios en el sector público:",
+                options: [
+                    "No devengará retribuciones, y el tiempo de permanencia en esta situación les será reconocido a efectos de trienios y carrera profesional, en su caso, cuando reingresen al servicio activo",
+                    "Devengará retribuciones, y el tiempo de permanencia en esta situación les será reconocido a efectos de trienios y carrera profesional, en su caso, cuando reingresen al servicio activo",
+                    "No devengará retribuciones, y el tiempo de permanencia en esta situación NO será reconocido a efectos de trienios y carrera profesional, en su caso, cuando reingresen al servicio activo",
+                    "Devengará retribuciones, y el tiempo de permanencia en esta situación NO será reconocido a efectos de trienios y carrera profesional, en su caso, cuando reingresen al servicio activo"
+                ],
+                correct: 0 // A (según oficial, aunque parezca contradictorio)
+            },
+            {
+                question: "El artículo 43.3 de la vigente Constitución Española establece que los poderes públicos fomentarán:",
+                options: [
+                    "La educación",
+                    "La educación y la cultura",
+                    "La educación, la cultura y la educación física",
+                    "La educación sanitaria, la educación física y el deporte. Asimismo facilitarán la adecuada utilización del ocio"
+                ],
+                correct: 3 // D
+            },
+            {
+                question: "Dentro de los programas de actuación del I Plan de Igualdad de la Administración General de la Junta de Andalucía 2023-2027, se encuentra:",
+                options: [
+                    "Mentoría para el liderazgo de las mujeres",
+                    "Sensibilización en diversidad sexual y de género",
+                    "Regulación del teletrabajo",
+                    "Las respuestas A), B) y C) son correctas"
+                ],
+                correct: 3 // D
+            },
+            {
+                question: "Entre las funciones a realizar por el/la Celador/a-Conductor/a en algunos centros del SAS, NO se encuentra la de colaborar en tareas de:",
+                options: [
+                    "Registro",
+                    "Archivo",
+                    "Digitalización",
+                    "Información"
+                ],
+                correct: 2 // C
+            },
+            {
+                question: "Las funciones a realizar por los/las Celadores/as-Conductores/as serán:",
+                options: [
+                    "Indistintamente, las establecidas en los artículos 13.9 y 15.2 del Estatuto de Personal no Sanitario al servicio de las Instituciones Sanitarias del Servicio Andaluz de Salud, así como las de colaborar en las tareas de recepción, información, archivo y registro de los centros de atención primaria de salud",
+                    "Las establecidas en la Orden de 11 de noviembre de 1999, por la que se modifica el artículo 3 de la de 12 de junio de 1995, por la que se crea la categoría de Celador-Conductor en el ámbito de las Instituciones Sanitarias del Servicio Andaluz de Salud",
+                    "Las establecidas conforme a la Orden de la Consejería de Salud de 12 de junio de 1995, por la que se crea dicha categoría, y las modificaciones introducidas por la Orden de la Consejería de Salud y Familias de 11 de noviembre de 1999 así como las establecidas en la Ley 55/2003, de 16 de diciembre, del Estatuto Marco del personal estatutario de los servicios de salud",
+                    "Indistintamente, las establecidas en los artículos 13.9 y 15.2 del Estatuto de Personal no Sanitario al servicio de las Instituciones Sanitarias de la Seguridad Social y las modificaciones introducidas por la Orden de la Consejería de Salud y Familias de 11 de noviembre de 1999"
+                ],
+                correct: 1 // B
+            },
+            {
+                question: "Los conductores de ambulancia no podrán circular con una tasa de alcohol:",
+                options: [
+                    "Superior a 0,5 gramos por litro en sangre, o de alcohol en aire espirado superior a 0,30 miligramos por litro",
+                    "Superior a 0,3 gramos por litro en sangre, o de alcohol en aire espirado superior a 0,15 miligramos por litro",
+                    "Los conductores de ambulancia no podrán superar ni en sangre ni en aire espirado la tasa de 0 gramos por litro",
+                    "La tasa de alcohol que no se puede sobrepasar es igual para todos los conductores"
+                ],
+                correct: 1 // B (según oficial, aunque debería ser C)
+            },
+            {
+                question: "¿A partir de qué edad, un menor podrá viajar como pasajero de una motocicleta o un ciclomotor?",
+                options: [
+                    "A partir de los cinco años si el conductor es su padre, madre o tutor, o una persona mayor de edad autorizada por ellos, utilicen casco homologado y se cumplan las condiciones específicas de seguridad establecidas reglamentariamente",
+                    "A partir de los siete años si el conductor es su padre, madre o tutor, o una persona mayor de edad autorizada por ellos, utilicen casco homologado y se cumplan las condiciones específicas de seguridad establecidas reglamentariamente",
+                    "A partir de los diez años, independientemente de quien sea el conductor, utilicen casco homologado y se cumplan las condiciones específicas de seguridad establecidas reglamentariamente",
+                    "No dependerá de la edad, sino de la estatura del menor"
+                ],
+                correct: 1 // B
+            },
+            {
+                question: "¿Tienen preferencia de paso los vehículos que circulen por una vía pavimentada sobre los que procedan de otra sin pavimentar?",
+                options: [
+                    "Sí",
+                    "No",
+                    "Sí, salvo que los que procedan de una vía sin pavimentar salgan por la derecha",
+                    "Sólo tendrán que cederle el paso cuando el vehículo de la vía sin pavimentar sea un tractor"
+                ],
+                correct: 0 // A
+            },
+            {
+                question: "Las ambulancias asistenciales destinadas a proporcionar soporte vital avanzado, serán:",
+                options: [
+                    "Clase A1",
+                    "Clase A2",
+                    "Clase B",
+                    "Clase C"
+                ],
+                correct: 3 // D (Clase C según oficial, aunque debería ser B)
+            },
+            {
+                question: "La frecuencia de inspección técnica periódica de vehículos categoría M1: vehículos de motor concebidos y fabricados principalmente para el transporte de personas y de sus equipajes, con un máximo de ocho plazas, excluida la del conductor, de más de diez años, sería:",
+                options: [
+                    "Bienal",
+                    "Anual",
+                    "Trimestral",
+                    "Cuatrimestral"
+                ],
+                correct: 1 // B
+            },
+            {
+                question: "Si en una inspección técnica de un vehículo, sale como resultado 'desfavorable', significa que:",
+                options: [
+                    "Se ha detectado algún defecto clasificado como leve",
+                    "Se ha detectado algún defecto clasificado como grave",
+                    "Se ha detectado algún defecto clasificado como muy grave",
+                    "Se ha detectado algún defecto clasificado como leve y grave"
+                ],
+                correct: 1 // B
+            },
+            {
+                question: "¿Cuál de los siguientes elementos, NO pertenece a la seguridad activa de un vehículo?",
+                options: [
+                    "La suspensión",
+                    "La dirección",
+                    "El cinturón de seguridad",
+                    "Los frenos"
+                ],
+                correct: 2 // C
+            },
+            {
+                question: "El freno de mano, también denominado freno de estacionamiento, actúa:",
+                options: [
+                    "Sobre las ruedas delanteras en vehículos de tracción delantera y sobre las traseras en los de tracción trasera",
+                    "Sobre las ruedas del eje delantero",
+                    "Sobre las ruedas del eje trasero",
+                    "Sobre las cuatro ruedas del vehículo"
+                ],
+                correct: 2 // C
+            },
+            {
+                question: "¿Cuál de los siguientes, es un elemento principal fijo de un motor?",
+                options: [
+                    "Bloque con las camisas de los cilindros",
+                    "Pistón incluidos los segmentos y el bulón",
+                    "Árbol de levas",
+                    "Cigüeñal"
+                ],
+                correct: 0 // A
+            },
+            {
+                question: "¿Qué cantidad de kilómetros debe superar un vehículo que posea algún motor eléctrico, para poder llevar la etiqueta 0?",
+                options: [
+                    "100 km",
+                    "60 km",
+                    "40 km",
+                    "80 km"
+                ],
+                correct: 2 // C
+            },
+            {
+                question: "La junta de culata se intercala:",
+                options: [
+                    "Entre la base de la culata y parte superior del bloque motor",
+                    "Entre la base de la culata y parte inferior del bloque motor",
+                    "Entre la culata y el colector de admisión",
+                    "Entre la base de la culata y las válvulas de escape"
+                ],
+                correct: 0 // A
+            },
+            {
+                question: "Los motores con dos tipos de potencia distinta, la eléctrica y la térmica, se denominan:",
+                options: [
+                    "Eléctricos",
+                    "Otto",
+                    "De compresión",
+                    "Híbridos"
+                ],
+                correct: 3 // D
+            },
+            {
+                question: "¿Cómo funciona el tipo de engrase por barboteo?",
+                options: [
+                    "Se aprovecha la fuerza centrífuga que engendra el giro del cigüeñal para lanzar aceite a todas las superficies del motor",
+                    "El aceite se transporta hasta los diferentes componentes del motor a través de un circuito presurizado por medio de una bomba",
+                    "Se emplea en motores de dos tiempos",
+                    "Todas las respuestas anteriores son correctas"
+                ],
+                correct: 0 // A
+            },
+            {
+                question: "La lubricación por presión, se realizará en elementos del motor tales como:",
+                options: [
+                    "Los pistones",
+                    "El cigüeñal",
+                    "Las válvulas",
+                    "Los segmentos"
+                ],
+                correct: 1 // B
+            },
+            {
+                question: "El elemento del motor que utiliza el engrase por barboteo, es:",
+                options: [
+                    "La bancada",
+                    "Las válvulas",
+                    "El cigüeñal",
+                    "La bomba de aceite"
+                ],
+                correct: 2 // C (según oficial, aunque debería ser B)
+            },
+            {
+                question: "La pieza que une la suspensión y la dirección del automóvil y contiene el vástago sobre el que gira la rueda, permitiendo apoyar las ruedas y girar conectando la rueda con la suspensión y la dirección, se denomina:",
+                options: [
+                    "Mangueta",
+                    "Delco",
+                    "Bendix",
+                    "Rótula"
+                ],
+                correct: 0 // A
+            },
+            {
+                question: "El mecanismo que va situado entre el motor y la caja de cambios, se llama:",
+                options: [
+                    "Diferencial",
+                    "Árbol de transmisión",
+                    "Embrague",
+                    "Cardán"
+                ],
+                correct: 2 // C
+            },
+            {
+                question: "El ruptor forma parte de:",
+                options: [
+                    "El sistema de encendido del circuito primario",
+                    "El condensador",
+                    "El sistema de encendido del circuito secundario",
+                    "La bobina de encendido"
+                ],
+                correct: 0 // A
+            },
+            {
+                question: "La parte fija del alternador, la que no tiene movimiento y es donde están alojadas las bobinas inducidas donde se genera la corriente eléctrica, se conoce como:",
+                options: [
+                    "Estator",
+                    "Puente rectificador",
+                    "Rotor",
+                    "Regulador de tensión"
+                ],
+                correct: 0 // A
+            },
+            {
+                question: "En la impresión 205/60R-92V que podemos encontrar en un neumático, el número 92 nos indicaría:",
+                options: [
+                    "Índice de carga máxima",
+                    "Diámetro en pulgadas",
+                    "Relación entre anchura y altura",
+                    "Velocidad máxima de uso"
+                ],
+                correct: 0 // A
+            },
+            {
+                question: "En vehículos diésel, humos negros en el tubo de escape, indican:",
+                options: [
+                    "Mezcla rica en gasolina",
+                    "Escasez de carburante",
+                    "Combustión ineficiente",
+                    "Exceso de consumo de aceite"
+                ],
+                correct: 2 // C
+            },
+            {
+                question: "Para comprobar el nivel de líquido refrigerante, el motor debe estar:",
+                options: [
+                    "Frío",
+                    "Encendido",
+                    "No importa si está apagado o encendido, solo se comprueba en el vaso de expansión",
+                    "Caliente para que circule el líquido"
+                ],
+                correct: 0 // A
+            },
+            {
+                question: "¿Cuándo se puede considerar un accidente de tráfico mortal?",
+                options: [
+                    "Cuando al menos una persona fallezca como consecuencia del accidente de tráfico, dentro de las 48 horas siguientes",
+                    "Cuando al menos una persona fallezca como consecuencia del accidente de tráfico, dentro de las 24 horas siguientes",
+                    "Indistintamente del tiempo que haya transcurrido, se considera accidente de tráfico mortal cuando al menos haya fallecido una persona",
+                    "Para que un accidente de tráfico se considere mortal debe al menos fallecer una persona en el mismo momento de ocurrir el accidente"
+                ],
+                correct: 1 // B
+            },
+            {
+                question: "En una RCP básica, ¿cuál sería la relación correcta de masaje cardiaco y ventilación?",
+                options: [
+                    "30 compresiones torácicas y 2 ventilaciones",
+                    "Dependerá del número de reanimadores que intervengan",
+                    "15 compresiones torácicas y 2 ventilaciones",
+                    "5 compresiones torácicas y 2 ventilaciones"
+                ],
+                correct: 0 // A
+            },
+            {
+                question: "¿Se debe colocar un torniquete como primera opción si nos encontramos ante una hemorragia?",
+                options: [
+                    "Sí",
+                    "Sólo se utilizará como último recurso, cuando hayan fallado todos los demás",
+                    "Sólo se aplicará un torniquete como primera opción si la hemorragia es en un miembro superior",
+                    "Sólo se aplicará un torniquete como primera opción si la hemorragia es en un miembro inferior"
+                ],
+                correct: 1 // B
+            },
+            {
+                question: "Ante una posible parada cardiorrespiratoria (PCR), ¿qué es lo primero que tendríamos que valorar en la persona accidentada?",
+                options: [
+                    "El pulso",
+                    "La respiración",
+                    "El nivel de conciencia",
+                    "La presencia de heridas"
+                ],
+                correct: 2 // C
+            },
+            {
+                question: "¿A qué tipo de transporte sanitario nos estamos refiriendo, cuando hablamos del que se realiza desde el lugar del accidente hasta el hospital?",
+                options: [
+                    "Transporte terciario",
+                    "Transporte primario",
+                    "Transporte secundario",
+                    "Transporte cuaternario"
+                ],
+                correct: 1 // B
+            },
+            {
+                question: "Cuando hablamos de transporte sanitario urgente, nos estamos refiriendo:",
+                options: [
+                    "Al que se realiza con pacientes que necesitan atención sanitaria inmediata, por encontrarse en situación de riesgo vital inminente",
+                    "Al que se realiza con pacientes con patologías que pueden entrañar riesgo vital grave, pero en los que en principio no se supone que de forma inmediata esté en riesgo la vida",
+                    "Al que se realiza con pacientes que tienen que estar a una determinada hora en hemodiálisis",
+                    "Al que se realiza entre hospitales con pacientes clínicamente estables y que necesitan realizarse una prueba diagnóstica"
+                ],
+                correct: 1 // B (según oficial, aunque A parece más lógica)
+            },
+            {
+                question: "¿Deberán estar dotadas las ambulancias de la clase A2 con una camilla?",
+                options: [
+                    "Sí, indistintamente del tipo de ambulancia que sea, siempre deberán estar dotadas con una camilla",
+                    "En este tipo de ambulancias la dotación de camilla es opcional",
+                    "Dependerá exclusivamente de la distancia que tengan que recorrer",
+                    "Dependerá exclusivamente de la patología de los enfermos que transporten"
+                ],
+                correct: 1 // B (según oficial)
+            },
+            {
+                question: "La posición corporal en la que la persona se encuentra tendido boca abajo y con la cabeza de lado, se denomina:",
+                options: [
+                    "Posición de Sims",
+                    "Decúbito supino o dorsal",
+                    "Decúbito prono",
+                    "Posición de Trendelenburg"
+                ],
+                correct: 2 // C
+            },
+            {
+                question: "La posición en la cual el paciente se halla en decúbito supino con la cabeza colgando, con el objetivo de mantener el cuello en hiperextensión, se denomina:",
+                options: [
+                    "Posición de Roser",
+                    "Posición de Trendelenburg",
+                    "Posición de Morestin",
+                    "Posición de Fowler"
+                ],
+                correct: 0 // A (según oficial, aunque debería ser C)
+            },
+            {
+                question: "La posición en la que la persona se encuentra tendida boca arriba, en posición horizontal, con la espalda en contacto con la superficie y las extremidades inferiores extendidas, se denomina:",
+                options: [
+                    "Posición de Sims",
+                    "Decúbito supino o dorsal",
+                    "Posición de Trendelenburg",
+                    "Posición de Fowler"
+                ],
+                correct: 1 // B
+            },
+            {
+                question: "La posición consistente en colocar al paciente en decúbito supino pero situando la cabeza a 45º por encima de los pies, se denomina:",
+                options: [
+                    "Posición ginecológica",
+                    "Posición de Trendelenburg",
+                    "Posición de Morestin",
+                    "Posición de Fowler"
+                ],
+                correct: 2 // C (según oficial, aunque debería ser D)
+            },
+            {
+                question: "La posición que implica que el paciente se encuentra en una postura casi erguida, con la parte superior del cuerpo formando un ángulo de entre 45 y 90 grados (generalmente no menos de 80 grados) en relación a la parte inferior del cuerpo, es una variante 'alta' de la:",
+                options: [
+                    "Posición ginecológica",
+                    "Posición de Trendelenburg",
+                    "Posición de Morestin",
+                    "Posición de Fowler"
+                ],
+                correct: 3 // D
+            },
+            {
+                question: "¿Para qué se utilizan los cambios posturales programados en pacientes inmovilizados?",
+                options: [
+                    "Para ayudar a evitar la aparición de úlceras por presión",
+                    "Para darle de comer al paciente para evitar la broncoaspiración",
+                    "Para facilitar el aseo del paciente",
+                    "Sólo se utilizan a requerimiento del paciente para cambiar de postura"
+                ],
+                correct: 0 // A
+            },
+            {
+                question: "Evitar que los visitantes fumen en las habitaciones:",
+                options: [
+                    "No es una función del/la Celador/a-Conductor/a",
+                    "Es una función exclusiva del/la vigilante de seguridad del centro",
+                    "Es una función del/la Celador/a-Conductor/a",
+                    "Es una función exclusiva del/la responsable de planta"
+                ],
+                correct: 2 // C
+            },
+            {
+                question: "NO es función propia del/la Celador/a-Conductor/a:",
+                options: [
+                    "Ayudar al personal de enfermería o personas encargadas a amortajar a los enfermos fallecidos",
+                    "Ayudar al personal de enfermería de planta al movimiento de los enfermos encamados",
+                    "Mantener el régimen establecido por la Dirección para el acceso de personal a las distintas dependencias de la Institución",
+                    "Vigilar el acceso de los visitantes en las habitaciones de los enfermos, cuidando no introduzcan más que aquellos paquetes expresamente autorizados por la Dirección"
+                ],
+                correct: 2 // C (según oficial, aunque debería ser D)
+            },
+            {
+                question: "Entre las funciones del/la Celador/a-Conductor/a, como categoría estatutaria en el Servicio Andaluz de Salud (SAS), se encuentra:",
+                options: [
+                    "Los trabajos propios de su especialidad en relación con los vehículos automóviles al servicio de la Institución",
+                    "La única función relacionada con los vehículos automóviles es su conducción",
+                    "No hay ninguna función encomendada relacionada con los vehículos automóviles",
+                    "La reparación de pequeñas averías del vehículo que ocurran en su turno de trabajo"
+                ],
+                correct: 0 // A
+            },
+            {
+                question: "Son funciones del/la Celador/a-Conductor/a en algunos centros del Servicio Andaluz de Salud:",
+                options: [
+                    "Las de apoyo material, ejercicio y desarrollo de tareas administrativas",
+                    "Las de preparación y tratamiento de los datos para su uso informático",
+                    "Las de colaborar en tareas de registro, archivo y recepción",
+                    "Las de preparación y tratamiento de los datos para su uso estadístico"
+                ],
+                correct: 2 // C
+            },
+            {
+                question: "El derecho a la confidencialidad de toda la información relacionada con el proceso de un paciente y con su estancia en una institución sanitaria viene regulada:",
+                options: [
+                    "Para las instituciones públicas, en la Ley General de Sanidad; y para las instituciones privadas, en el Reglamento Europeo de Sanidad",
+                    "Para las instituciones privadas, en la Ley General de Sanidad; y para las instituciones públicas, en el Reglamento Europeo de Sanidad",
+                    "Para las instituciones públicas y para las privadas que colaboren con el sistema público, en la Ley General de Sanidad",
+                    "Para las instituciones públicas en la Ley de Salud de Andalucía; y para las instituciones privadas en el Reglamento Europeo de Sanidad"
+                ],
+                correct: 2 // C
+            },
+            {
+                question: "Cuando se presenta una reclamación en el libro que a tal efecto existe en cualquier centro del Servicio Andaluz de Salud, y se necesite más de una hoja para redactar su contenido:",
+                options: [
+                    "Se hará en el libro como continuación de la hoja anterior",
+                    "Se utilizará la primera hoja y los profesionales del centro proporcionarán tantos folios en blanco como sean necesarios, que graparán a la hoja del libro",
+                    "Sólo se puede utilizar una hoja por reclamación, por lo que tendrá que resumirse para que quepa en la hoja del libro",
+                    "En el caso de necesitar varias hojas para hacer una reclamación, siempre habrá de hacerse por duplicado"
+                ],
+                correct: 1 // B
+            },
+            {
+                question: "Señale la respuesta más adecuada. En Atención Primaria, un ciudadano puede obtener cita para:",
+                options: [
+                    "Sólo para consultas médicas",
+                    "Sólo para consultas médicas y de enfermería",
+                    "Para consultas médicas, de enfermería y para gestiones administrativas",
+                    "Sólo para consultas de enfermería"
+                ],
+                correct: 2 // C
+            },
+            {
+                question: "¿Cuál de los siguientes requisitos es FALSO, con respecto a la segunda opinión médica en Andalucía?",
+                options: [
+                    "Que se requiera un tratamiento urgente o inmediato",
+                    "No haber efectuado anteriormente, la persona solicitante o su representante, otra solicitud de segunda opinión médica para el mismo proceso asistencial",
+                    "La enfermedad o el tratamiento propuesto para la persona solicitante le ha sido diagnosticado en cualquier centro dependiente del Servicio Andaluz de Salud",
+                    "Que en la persona solicitante se dé alguna de las circunstancias clínicas correspondientes a los diagnósticos recogidos en la normativa"
+                ],
+                correct: 0 // A
+            },
+            {
+                question: "En el Sistema Sanitario Público de Andalucía (SSPA), el plazo de respuesta que se garantiza para la realización de las primeras consultas de asistencia especializada, derivadas de atención primaria, es de:",
+                options: [
+                    "30 días",
+                    "60 días",
+                    "90 días",
+                    "120 días"
+                ],
+                correct: 1 // B
+            },
+            {
+                question: "En el SSPA, el plazo de respuesta que se garantiza para la realización de un procedimiento diagnóstico, es de:",
+                options: [
+                    "30 días",
+                    "60 días",
+                    "90 días",
+                    "120 días"
+                ],
+                correct: 0 // A
+            },
+            {
+                question: "Según el Decreto 127/2003 (de la Consejería de Salud), de 13 mayo, por el que se establece el ejercicio de derecho a la segunda opinión médica en el Sistema Sanitario Público de Andalucía, ¿quién o quiénes podrá/n solicitar la segunda opinión médica?",
+                options: [
+                    "Por el propio paciente, por sus familiares, parejas de hecho, por personas allegadas, por sus representantes legales o por persona en quien expresamente delegue",
+                    "Por el propio paciente y por sus representantes legales exclusivamente",
+                    "Exclusivamente por el propio paciente, por familiares de primer grado de consanguinidad o por sus representantes legales",
+                    "Principalmente por el propio paciente, por sus familiares hasta segundo grado de consanguinidad, por sus representantes legales o por persona en quien expresamente delegue"
+                ],
+                correct: 0 // A
+            },
+            {
+                question: "El Servicio Andaluz de Salud da la posibilidad al ciudadano de elegir:",
+                options: [
+                    "Al médico de familia, al especialista y al hospital público en el que desea ser intervenido quirúrgicamente",
+                    "Al médico de familia y al pediatra exclusivamente",
+                    "La especialidad que le atienda en el ámbito hospitalario tras derivación por su médico de familia, pero nunca se puede elegir al facultativo especialista",
+                    "Tanto al médico de familia como al especialista hospitalario, pero nunca se puede elegir hospital público en el que se desea ser intervenido, ya que en estos casos siempre se le asignará el hospital de referencia que le corresponda por su zona de residencia"
+                ],
+                correct: 0 // A (según oficial, aunque parezca contradictorio con pregunta 69)
+            },
+            {
+                question: "En informática, ¿qué es un bit?",
+                options: [
+                    "Es la unidad de capacidad de almacenamiento estándar",
+                    "Es una parte del Hardware básico",
+                    "Es una parte del Hardware complementario",
+                    "Es la unidad mínima de información"
+                ],
+                correct: 3 // D
+            },
+            {
+                question: "El programa para la manipulación de datos dispuestos en forma de tablas, con la finalidad de efectuar operaciones complejas con fórmulas y funciones, es:",
+                options: [
+                    "Base de datos",
+                    "Presentaciones informáticas",
+                    "Procesador de texto",
+                    "Hoja de cálculo"
+                ],
+                correct: 3 // D
+            },
+            {
+                question: "Las cookies:",
+                options: [
+                    "Son datos que los procesadores de texto guardan en la CPU del cliente que accede a ellos, para facilitar posteriores accesos",
+                    "No pueden borrarse nunca",
+                    "Son datos que las páginas Web guardan en el navegador del cliente que accede a ellas, para facilitar posteriores accesos a dicha página",
+                    "No pueden ser bloqueadas por ningún sistema"
+                ],
+                correct: 2 // C
+            },
+            {
+                question: "La 'barra de estado' en el procesador de textos Microsoft Word:",
+                options: [
+                    "Permite ver la página en la que se encuentra, las que tiene el documento, pero no el número de palabras que completan el documento",
+                    "Permite ver el número de palabras que completan el documento, la página en la que se encuentra, pero no lo las páginas que tiene el documento",
+                    "Permite ver la página en la que se encuentra, las que tiene el documento y el número de palabras que completan el documento",
+                    "Permite ver el número de palabras que completan el documento, las páginas que tiene el documento, pero no permite ver la página en la que se encuentra"
+                ],
+                correct: 2 // C
+            },
+            {
+                question: "En circunstancias especiales, trabajadores sanos y entrenados físicamente podrían manipular cargas, de forma esporádica y en condiciones seguras, de hasta:",
+                options: [
+                    "50 kg",
+                    "35 kg",
+                    "40 kg",
+                    "25 kg"
+                ],
+                correct: 2 // C (40 kg según oficial)
+            },
+            {
+                question: "En relación al vigente Plan de Prevención y Atención frente a Agresiones a Profesionales del Sistema Sanitario Público de Andalucía (SSPA), señale lo adecuado:",
+                options: [
+                    "Potencia las acciones de concienciación dirigidas a la ciudadanía",
+                    "Homogeneiza la cartelería institucional en todos los centros del SSPA",
+                    "Potencia la formación en materia de prevención de agresiones",
+                    "Todas las respuestas anteriores son correctas"
+                ],
+                correct: 3 // D
+            }
+        ];
+
+        // Variables globales
+        let currentQuestion = 0;
+        let userAnswers = new Array(75).fill(null);
+        let timeRemaining = 7200; // 120 minutos en segundos
+        let timerInterval;
+        let examFinished = false;
+
+        // Iniciar examen
+        function startExam() {
+            document.getElementById('startScreen').style.display = 'none';
+            document.getElementById('quizScreen').style.display = 'block';
+            renderQuestion();
+            startTimer();
+        }
+
+        // Renderizar pregunta actual
+        function renderQuestion() {
+            const q = examData[currentQuestion];
+            
+            document.getElementById('questionNumber').textContent = `Pregunta ${currentQuestion + 1} de 75`;
+            document.getElementById('questionText').textContent = q.question;
+            
+            // Actualizar barra de progreso
+            const progress = ((currentQuestion + 1) / 75) * 100;
+            document.getElementById('progressFill').style.width = `${progress}%`;
+            document.getElementById('progressText').textContent = `Pregunta ${currentQuestion + 1} de 75`;
+            
+            // Renderizar opciones
+            const optionsContainer = document.getElementById('optionsContainer');
+            optionsContainer.innerHTML = '';
+            
+            const letters = ['A', 'B', 'C', 'D'];
+            q.options.forEach((option, index) => {
+                const div = document.createElement('div');
+                div.className = 'option';
+                if (userAnswers[currentQuestion] === index) {
+                    div.classList.add('selected');
+                }
+                div.innerHTML = `
+                    <div class="option-letter">${letters[index]}</div>
+                    <div>${option}</div>
+                `;
+                div.onclick = () => selectOption(index);
+                optionsContainer.appendChild(div);
+            });
+            
+            // Actualizar botones de navegación
+            document.getElementById('btnPrev').disabled = currentQuestion === 0;
+            document.getElementById('btnNext').textContent = currentQuestion === 74 ? 'Ver resultados →' : 'Siguiente →';
+            
+            // Mostrar botón finalizar en las últimas 5 preguntas
+            if (currentQuestion >= 70) {
+                document.getElementById('btnFinish').style.display = 'inline-flex';
+            }
+        }
+
+        // Seleccionar opción
+        function selectOption(index) {
+            if (examFinished) return;
+            
+            userAnswers[currentQuestion] = index;
+            
+            // Actualizar visual
+            const options = document.querySelectorAll('.option');
+            options.forEach((opt, i) => {
+                opt.classList.remove('selected');
+                if (i === index) opt.classList.add('selected');
+            });
+        }
+
+        // Navegación
+        function nextQuestion() {
+            if (currentQuestion < 74) {
+                currentQuestion++;
+                renderQuestion();
+            } else {
+                finishExam();
+            }
+        }
+
+        function prevQuestion() {
+            if (currentQuestion > 0) {
+                currentQuestion--;
+                renderQuestion();
+            }
+        }
+
+        // Temporizador
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timeRemaining--;
+                
+                const minutes = Math.floor(timeRemaining / 60);
+                const seconds = timeRemaining % 60;
+                const timerEl = document.getElementById('timer');
+                timerEl.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                
+                // Advertencia cuando queden 10 minutos
+                if (timeRemaining <= 600) {
+                    timerEl.classList.add('warning');
+                }
+                
+                // Finalizar automáticamente cuando se acabe el tiempo
+                if (timeRemaining <= 0) {
+                    clearInterval(timerInterval);
+                    finishExam();
+                }
+            }, 1000);
+        }
+
+        // Finalizar examen
+        function finishExam() {
+            clearInterval(timerInterval);
+            examFinished = true;
+            
+            // Calcular resultados
+            let correct = 0;
+            let incorrect = 0;
+            let empty = 0;
+            
+            userAnswers.forEach((answer, index) => {
+                if (answer === null) {
+                    empty++;
+                } else if (answer === examData[index].correct) {
+                    correct++;
+                } else {
+                    incorrect++;
+                }
+            });
+            
+            // Calcular puntuación con penalización 1/4
+            const penalty = incorrect * 0.25;
+            const rawScore = correct - penalty;
+            const finalScore = Math.max(0, (rawScore / 75) * 100).toFixed(2);
+            
+            // Mostrar resultados
+            showResults(correct, incorrect, empty, penalty, finalScore);
+        }
+
+        // Mostrar pantalla de resultados
+        function showResults(correct, incorrect, empty, penalty, finalScore) {
+            document.getElementById('quizScreen').style.display = 'none';
+            document.getElementById('resultsScreen').style.display = 'block';
+            
+            // Icono según resultado
+            const iconEl = document.getElementById('resultIcon');
+            if (finalScore >= 60) {
+                iconEl.textContent = '🏆';
+            } else if (finalScore >= 40) {
+                iconEl.textContent = '📚';
+            } else {
+                iconEl.textContent = '💪';
+            }
+            
+            // Puntuación principal
+            document.getElementById('scoreMain').textContent = finalScore;
+            
+            // Detalles
+            document.getElementById('correctCount').textContent = correct;
+            document.getElementById('incorrectCount').textContent = incorrect;
+            document.getElementById('emptyCount').textContent = empty;
+            document.getElementById('penaltyPoints').textContent = penalty.toFixed(2);
+            
+            // Nota final
+            const gradeEl = document.getElementById('finalGrade');
+            if (finalScore >= 60) {
+                gradeEl.textContent = 'APROBADO';
+                gradeEl.className = 'final-grade approved';
+            } else {
+                gradeEl.textContent = 'SUSPENSO';
+                gradeEl.className = 'final-grade suspended';
+            }
+            
+            // Mensaje personalizado
+            const msgEl = document.getElementById('resultMessage');
+            if (finalScore >= 80) {
+                msgEl.innerHTML = `<strong>🎉 ¡Excelente!</strong><br>Has dominado el examen. Estás listo para el 2026.`;
+            } else if (finalScore >= 60) {
+                msgEl.innerHTML = `<strong>✅ Aprobado</strong><br>Buen resultado, pero hay margen de mejora. Revisa los temas donde fallaste.`;
+            } else if (finalScore >= 40) {
+                msgEl.innerHTML = `<strong>📚 Necesitas más práctica</strong><br>El nivel del SAS es exigente. Entrena con las trampas habituales.`;
+            } else {
+                msgEl.innerHTML = `<strong>💪 No te rindas</strong><br>Este examen es difícil. La clave está en memorizar los artículos exactos.`;
+            }
+        }
+
+        // Reiniciar examen
+        function restartExam() {
+            currentQuestion = 0;
+            userAnswers = new Array(75).fill(null);
+            timeRemaining = 7200;
+            examFinished = false;
+            
+            document.getElementById('resultsScreen').style.display = 'none';
+            document.getElementById('startScreen').style.display = 'block';
+            document.getElementById('timer').classList.remove('warning');
+        }
+    </script>
+</body>
+</html>
